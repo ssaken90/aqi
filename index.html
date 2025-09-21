@@ -1,0 +1,1822 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AQI Calculator</title>
+    <meta name="description" content="Калькулятор индекса качества воздуха по стандарту US EPA">
+    <meta name="theme-color" content="#007bff">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.webmanifest">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --aqi-good: #00e400;
+            --aqi-moderate: #ffff00;
+            --aqi-unhealthy-sensitive: #ff7e00;
+            --aqi-unhealthy: #ff0000;
+            --aqi-very-unhealthy: #8f3f97;
+            --aqi-hazardous: #7e0023;
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --gradient-warning: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        [data-bs-theme="dark"] {
+            --bs-body-bg: #0d1117;
+            --bs-body-color: #f0f6fc;
+            --bs-border-color: #30363d;
+        }
+
+        body {
+            background: var(--bs-body-bg, #f8f9fa);
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        .app-header {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 1.5rem 0;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .form-section, .result-section, .breakdown-section, .history-section {
+            margin-bottom: 2rem;
+        }
+
+        /* Enhanced Input Controls */
+        .pollutant-control {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .pollutant-control:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        [data-bs-theme="dark"] .pollutant-control {
+            background: #161b22;
+            border: 1px solid #30363d;
+        }
+
+        .pollutant-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            margin-right: 1rem;
+        }
+
+        .pollutant-pm25 { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .pollutant-pm10 { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .pollutant-o3 { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .pollutant-co { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+        .pollutant-no2 { background: linear-gradient(135deg, #fa709a, #fee140); }
+        .pollutant-so2 { background: linear-gradient(135deg, #a8edea, #fed6e3); }
+
+        .dual-input {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .range-input {
+            flex: 1;
+        }
+
+        .number-input {
+            width: 100px;
+        }
+
+        .custom-range {
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 10px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .custom-range::-webkit-slider-thumb {
+            appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #007bff;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+        }
+
+        .custom-range::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+
+        /* Enhanced Result Cards */
+        .result-card {
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .result-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(180deg); }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .aqi-gauge {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 1rem;
+            position: relative;
+        }
+
+        .aqi-value {
+            font-size: 3.5rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .aqi-category {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Enhanced Charts Container */
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .chart-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+        }
+
+        [data-bs-theme="dark"] .chart-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+        }
+
+        .chart-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .chart-icon {
+            margin-right: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        /* Health Impact Indicators */
+        .health-impact {
+            background: var(--gradient-success);
+            border-radius: 15px;
+            padding: 1.5rem;
+            color: white;
+            margin-top: 1rem;
+        }
+
+        .health-impact.warning {
+            background: var(--gradient-warning);
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            z-index: 1000;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            border: none;
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        /* Calculate Button */
+        .calculate-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            border-radius: 50px;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            background: var(--gradient-primary);
+            border: none;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        @media (max-width: 768px) {
+            .calculate-btn {
+                left: 20px;
+                right: 20px;
+                border-radius: 50px;
+            }
+            
+            .dual-input {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Tooltips */
+        .info-tooltip {
+            cursor: help;
+            color: #6c757d;
+            transition: color 0.2s ease;
+        }
+
+        .info-tooltip:hover {
+            color: #007bff;
+        }
+
+        /* Comparison Cards */
+        .comparison-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1rem;
+            margin: 0.5rem 0;
+        }
+
+        /* Export Button */
+        .export-btn {
+            background: var(--gradient-success);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            padding: 0.5rem 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        /* Loading animation */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* AQI Category Colors */
+        .aqi-good { background: var(--aqi-good); }
+        .aqi-moderate { background: var(--aqi-moderate); color: #000; }
+        .aqi-unhealthy-sensitive { background: var(--aqi-unhealthy-sensitive); }
+        .aqi-unhealthy { background: var(--aqi-unhealthy); }
+        .aqi-very-unhealthy { background: var(--aqi-very-unhealthy); }
+        .aqi-hazardous { background: var(--aqi-hazardous); }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Notification Toast */
+        .notification-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            min-width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Notification Toast -->
+    <div class="toast notification-toast" id="notificationToast" role="alert">
+        <div class="toast-header">
+            <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+            <strong class="me-auto">Предупреждение</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body" id="toastBody">
+            Превышен безопасный уровень загрязнения воздуха!
+        </div>
+    </div>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()" title="Переключить тему">
+        <i class="bi bi-moon-fill" id="themeIcon"></i>
+    </button>
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h1 class="h3 mb-0">
+                        <i class="bi bi-cloud-haze me-2"></i>
+                        <span data-i18n="app.title">AQI Calculator Pro</span>
+                    </h1>
+                    <p class="mb-0 opacity-75" data-i18n="app.subtitle">Профессиональный калькулятор качества воздуха</p>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-outline-light" onclick="showSettings()">
+                        <i class="bi bi-gear"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="input-tab" data-bs-toggle="tab" data-bs-target="#input-pane" type="button" role="tab">
+                    <i class="bi bi-sliders me-1"></i>
+                    <span data-i18n="nav.input">Ввод данных</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="result-tab" data-bs-toggle="tab" data-bs-target="#result-pane" type="button" role="tab">
+                    <i class="bi bi-speedometer2 me-1"></i>
+                    <span data-i18n="nav.result">Результат</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics-pane" type="button" role="tab">
+                    <i class="bi bi-graph-up me-1"></i>
+                    <span data-i18n="nav.analytics">Аналитика</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history-pane" type="button" role="tab">
+                    <i class="bi bi-clock-history me-1"></i>
+                    <span data-i18n="nav.history">История</span>
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="mainTabContent">
+            <!-- Input Section -->
+            <div class="tab-pane fade show active" id="input-pane" role="tabpanel">
+                <div class="form-section mt-3">
+                    <!-- PM2.5 -->
+                    <div class="pollutant-control" data-pollutant="pm25">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="pollutant-icon pollutant-pm25">
+                                <i class="bi bi-circle-fill"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">
+                                    PM2.5 (μg/m³)
+                                    <i class="bi bi-info-circle info-tooltip ms-1" 
+                                       data-bs-toggle="tooltip" 
+                                       title="Твердые частицы диаметром менее 2.5 микрометров. Наиболее опасны для здоровья, проникают в альвеолы легких."></i>
+                                </h6>
+                                <small class="text-muted">Норма ВОЗ: до 15 μg/m³ (24ч)</small>
+                            </div>
+                        </div>
+                        <div class="dual-input">
+                            <input type="range" class="form-range custom-range range-input" 
+                                   id="pm25Range" min="0" max="500" step="0.1" value="0">
+                            <input type="number" class="form-control number-input" 
+                                   id="pm25Input" min="0" max="500" step="0.1" placeholder="0.0">
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">Диапазон: 0 - 500 μg/m³</small>
+                        </div>
+                    </div>
+
+                    <!-- PM10 -->
+                    <div class="pollutant-control" data-pollutant="pm10">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="pollutant-icon pollutant-pm10">
+                                <i class="bi bi-circle"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">
+                                    PM10 (μg/m³)
+                                    <i class="bi bi-info-circle info-tooltip ms-1" 
+                                       data-bs-toggle="tooltip" 
+                                       title="Твердые частицы диаметром менее 10 микрометров. Включают пыль, пыльцу, споры."></i>
+                                </h6>
+                                <small class="text-muted">Норма ВОЗ: до 45 μg/m³ (24ч)</small>
+                            </div>
+                        </div>
+                        <div class="dual-input">
+                            <input type="range" class="form-range custom-range range-input" 
+                                   id="pm10Range" min="0" max="1000" step="1" value="0">
+                            <input type="number" class="form-control number-input" 
+                                   id="pm10Input" min="0" max="1000" step="1" placeholder="0">
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">Диапазон: 0 - 1000 μg/m³</small>
+                        </div>
+                    </div>
+
+                    <!-- O3 -->
+                    <div class="pollutant-control" data-pollutant="o3">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="pollutant-icon pollutant-o3">
+                                <i class="bi bi-cloud"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">
+                                    O₃ (ppm)
+                                    <i class="bi bi-info-circle info-tooltip ms-1" 
+                                       data-bs-toggle="tooltip" 
+                                       title="Приземный озон, образуется в результате фотохимических реакций. Раздражает дыхательные пути."></i>
+                                </h6>
+                                <small class="text-muted">8-часовое среднее</small>
+                            </div>
+                        </div>
+                        <div class="dual-input">
+                            <input type="range" class="form-range custom-range range-input" 
+                                   id="o3Range" min="0" max="0.5" step="0.001" value="0">
+                            <input type="number" class="form-control number-input" 
+                                   id="o3Input" min="0" max="0.5" step="0.001" placeholder="0.000">
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">Диапазон: 0 - 0.5 ppm</small>
+                        </div>
+                    </div>
+
+                    <!-- CO -->
+                    <div class="pollutant-control" data-pollutant="co">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="pollutant-icon pollutant-co">
+                                <i class="bi bi-exclamation-triangle"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">
+                                    CO (ppm)
+                                    <i class="bi bi-info-circle info-tooltip ms-1" 
+                                       data-bs-toggle="tooltip" 
+                                       title="Угарный газ, образуется при неполном сгорании. Смертельно опасен в высоких концентрациях."></i>
+                                </h6>
+                                <small class="text-muted">8-часовое среднее</small>
+                            </div>
+                        </div>
+                        <div class="dual-input">
+                            <input type="range" class="form-range custom-range range-input" 
+                                   id="coRange" min="0" max="50" step="0.1" value="0">
+                            <input type="number" class="form-control number-input" 
+                                   id="coInput" min="0" max="50" step="0.1" placeholder="0.0">
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">Диапазон: 0 - 50 ppm</small>
+                        </div>
+                    </div>
+
+                    <!-- NO2 -->
+                    <div class="pollutant-control" data-pollutant="no2">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="pollutant-icon pollutant-no2">
+                                <i class="bi bi-car-front"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">
+                                    NO₂ (ppb)
+                                    <i class="bi bi-info-circle info-tooltip ms-1" 
+                                       data-bs-toggle="tooltip" 
+                                       title="Диоксид азота, в основном от автотранспорта. Вызывает воспаление дыхательных путей."></i>
+                                </h6>
+                                <small class="text-muted">1-часовое среднее</small>
+                            </div>
+                        </div>
+                        <div class="dual-input">
+                            <input type="range" class="form-range custom-range range-input" 
+                                   id="no2Range" min="0" max="2000" step="1" value="0">
+                            <input type="number" class="form-control number-input" 
+                                   id="no2Input" min="0" max="2000" step="1" placeholder="0">
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">Диапазон: 0 - 2000 ppb</small>
+                        </div>
+                    </div>
+
+                    <!-- SO2 -->
+                    <div class="pollutant-control" data-pollutant="so2">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="pollutant-icon pollutant-so2">
+                                <i class="bi bi-factory"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">
+                                    SO₂ (ppb)
+                                    <i class="bi bi-info-circle info-tooltip ms-1" 
+                                       data-bs-toggle="tooltip" 
+                                       title="Диоксид серы, от промышленности и энергетики. Вызывает кислотные дожди и проблемы с дыханием."></i>
+                                </h6>
+                                <small class="text-muted">1-часовое среднее</small>
+                            </div>
+                        </div>
+                        <div class="dual-input">
+                            <input type="range" class="form-range custom-range range-input" 
+                                   id="so2Range" min="0" max="1000" step="1" value="0">
+                            <input type="number" class="form-control number-input" 
+                                   id="so2Input" min="0" max="1000" step="1" placeholder="0">
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">Диапазон: 0 - 1000 ppb</small>
+                        </div>
+                    </div>
+
+                    <!-- Comfort Parameters -->
+                    <div id="comfortSection" class="hidden">
+                        <h5 class="mt-4 mb-3" data-i18n="input.comfort">Параметры комфорта</h5>
+                        
+                        <div class="pollutant-control">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="pollutant-icon" style="background: linear-gradient(135deg, #ffeaa7, #fd79a8);">
+                                    <i class="bi bi-thermometer-half"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">CO₂ (ppm)</h6>
+                                    <small class="text-muted">Комфорт: 400-600 ppm</small>
+                                </div>
+                            </div>
+                            <div class="dual-input">
+                                <input type="range" class="form-range custom-range range-input" 
+                                       id="co2Range" min="300" max="5000" step="10" value="400">
+                                <input type="number" class="form-control number-input" 
+                                       id="co2Input" min="300" max="5000" step="10" placeholder="400">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result Section -->
+            <div class="tab-pane fade" id="result-pane" role="tabpanel">
+                <div class="result-section mt-3">
+                    <div id="resultCard" class="result-card hidden">
+                        <div class="aqi-gauge">
+                            <canvas id="gaugeChart" width="200" height="200"></canvas>
+                        </div>
+                        <div class="aqi-value" id="aqiValue">--</div>
+                        <div class="aqi-category" id="aqiCategory">--</div>
+                        <div class="aqi-advice" id="aqiAdvice">--</div>
+                        
+                        <button class="btn export-btn mt-3" onclick="exportResults()">
+                            <i class="bi bi-download me-2"></i>Экспорт результатов
+                        </button>
+                    </div>
+                    
+                    <!-- Health Impact -->
+                    <div id="healthImpact" class="health-impact hidden">
+                        <h6><i class="bi bi-heart-pulse me-2"></i>Влияние на здоровье</h6>
+                        <div id="healthInfo"></div>
+                    </div>
+
+                    <!-- WHO Comparison -->
+                    <div id="whoComparison" class="hidden">
+                        <h6 class="mt-3 mb-2">Сравнение с нормами ВОЗ</h6>
+                        <div id="whoComparisonCards"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Section -->
+            <div class="tab-pane fade" id="analytics-pane" role="tabpanel">
+                <div class="mt-3">
+                    <div class="charts-container">
+                        <!-- Pollutant Breakdown -->
+                        <div class="chart-card">
+                            <h6 class="chart-title">
+                                <i class="bi bi-bar-chart chart-icon"></i>
+                                Вклад загрязнителей (IAQI)
+                            </h6>
+                            <canvas id="breakdownChart" height="300"></canvas>
+                        </div>
+
+                        <!-- Pie Chart -->
+                        <div class="chart-card">
+                            <h6 class="chart-title">
+                                <i class="bi bi-pie-chart chart-icon"></i>
+                                Распределение загрязнителей
+                            </h6>
+                            <canvas id="pieChart" height="300"></canvas>
+                        </div>
+
+                        <!-- Radar Chart -->
+                        <div class="chart-card">
+                            <h6 class="chart-title">
+                                <i class="bi bi-hexagon chart-icon"></i>
+                                Профиль загрязнения
+                            </h6>
+                            <canvas id="radarChart" height="300"></canvas>
+                        </div>
+
+                        <!-- Trend Chart -->
+                        <div class="chart-card">
+                            <h6 class="chart-title">
+                                <i class="bi bi-graph-up chart-icon"></i>
+                                Тренд AQI
+                            </h6>
+                            <canvas id="trendChart" height="300"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Table -->
+                    <div class="chart-card mt-3">
+                        <h6 class="chart-title">
+                            <i class="bi bi-table chart-icon"></i>
+                            Детальная информация
+                        </h6>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Загрязнитель</th>
+                                        <th>Концентрация</th>
+                                        <th>IAQI</th>
+                                        <th>Категория</th>
+                                        <th>% от нормы ВОЗ</th>
+                                        <th>Источники</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detailedTableBody">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">Выполните расчет для просмотра данных</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Section -->
+            <div class="tab-pane fade" id="history-pane" role="tabpanel">
+                <div class="history-section mt-3">
+                    <div class="chart-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="chart-title mb-0">
+                                <i class="bi bi-clock-history chart-icon"></i>
+                                История расчетов
+                            </h6>
+                            <div>
+                                <button class="btn btn-outline-primary btn-sm me-2" onclick="exportHistory()">
+                                    <i class="bi bi-download"></i> Экспорт
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" onclick="clearHistory()">
+                                    <i class="bi bi-trash"></i> Очистить
+                                </button>
+                            </div>
+                        </div>
+                        <div id="historyList">
+                            <div class="text-muted text-center">История пуста</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div class="modal fade" id="settingsModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-gear me-2"></i>Настройки
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <!-- Language Setting -->
+                                <div class="mb-3">
+                                    <label class="form-label">Язык интерфейса</label>
+                                    <select class="form-select" id="languageSelect">
+                                        <option value="ru">Русский</option>
+                                        <option value="en">English</option>
+                                    </select>
+                                </div>
+
+                                <!-- Notification Settings -->
+                                <div class="mb-3">
+                                    <label class="form-label">Уведомления</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="soundNotifications" checked>
+                                        <label class="form-check-label" for="soundNotifications">Звуковые уведомления</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="dangerAlerts" checked>
+                                        <label class="form-check-label" for="dangerAlerts">Предупреждения об опасности</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <!-- Pollutant Visibility -->
+                                <div class="mb-3">
+                                    <label class="form-label">Отображаемые загрязнители</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="showPM25" checked>
+                                        <label class="form-check-label" for="showPM25">PM2.5</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="showPM10" checked>
+                                        <label class="form-check-label" for="showPM10">PM10</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="showO3" checked>
+                                        <label class="form-check-label" for="showO3">O₃</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="showCO" checked>
+                                        <label class="form-check-label" for="showCO">CO</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="showNO2" checked>
+                                        <label class="form-check-label" for="showNO2">NO₂</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="showSO2" checked>
+                                        <label class="form-check-label" for="showSO2">SO₂</label>
+                                    </div>
+                                </div>
+
+                                <!-- Additional Options -->
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="showComfort">
+                                        <label class="form-check-label" for="showComfort">Показывать параметры комфорта</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="autoCalculate">
+                                        <label class="form-check-label" for="autoCalculate">Автоматический расчет при изменении</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" onclick="resetSettings()">Сброс к умолчанию</button>
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Сохранить изменения</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calculate Button -->
+    <button class="btn calculate-btn" onclick="calculateAQI()">
+        <i class="bi bi-calculator me-2"></i>
+        <span data-i18n="button.calculate">Рассчитать AQI</span>
+    </button>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+    <script type="module">
+        // Global state management
+        const appState = {
+            currentLang: 'ru',
+            currentTheme: 'light',
+            settings: {
+                showPollutants: {
+                    pm25: true,
+                    pm10: true,
+                    o3: true,
+                    co: true,
+                    no2: true,
+                    so2: true
+                },
+                showComfort: false,
+                language: 'ru',
+                soundNotifications: true,
+                dangerAlerts: true,
+                autoCalculate: false
+            },
+            lastCalculation: null,
+            history: [],
+            charts: {}
+        };
+
+        // WHO Guidelines for comparison
+        const whoGuidelines = {
+            pm25: 15, // μg/m³ (24h)
+            pm10: 45, // μg/m³ (24h)
+            o3: 0.060, // ppm (8h)
+            no2: 25, // ppb (24h average)
+            so2: 40 // ppb (24h average)
+        };
+
+        // Pollutant sources information
+        const pollutantSources = {
+            pm25: 'Транспорт, промышленность, курение',
+            pm10: 'Пыль, пыльца, строительство',
+            o3: 'Фотохимические реакции',
+            co: 'Неполное сгорание топлива',
+            no2: 'Автотранспорт, энергетика',
+            so2: 'Промышленность, энергетика'
+        };
+
+        // Enhanced internationalization
+        const i18n = {
+            ru: {
+                'app.title': 'Калькулятор AQI Pro',
+                'app.subtitle': 'Профессиональный калькулятор качества воздуха',
+                'nav.input': 'Ввод данных',
+                'nav.result': 'Результат',
+                'nav.analytics': 'Аналитика',
+                'nav.history': 'История',
+                'button.calculate': 'Рассчитать AQI',
+                'aqi.good': 'Хорошо',
+                'aqi.moderate': 'Умеренно',
+                'aqi.unhealthy_sensitive': 'Вредно для чувствительных групп',
+                'aqi.unhealthy': 'Вредно',
+                'aqi.very_unhealthy': 'Очень вредно',
+                'aqi.hazardous': 'Опасно',
+                'health.good': 'Отличные условия для любых активностей на улице',
+                'health.moderate': 'Обычная активность разрешена. Чувствительные люди могут испытывать незначительный дискомфорт',
+                'health.unhealthy_sensitive': 'Люди с заболеваниями сердца и легких, дети и пожилые должны ограничить длительные активности на улице',
+                'health.unhealthy': 'Все должны ограничить длительные активности на улице. Чувствительные группы должны избегать активностей на улице',
+                'health.very_unhealthy': 'Все должны избегать длительных активностей на улице. Чувствительные группы должны оставаться в помещении',
+                'health.hazardous': 'Все должны оставаться в помещении и избегать любых активностей на улице'
+            },
+            en: {
+                'app.title': 'AQI Calculator Pro',
+                'app.subtitle': 'Professional Air Quality Calculator',
+                'nav.input': 'Data Input',
+                'nav.result': 'Result',
+                'nav.analytics': 'Analytics',
+                'nav.history': 'History',
+                'button.calculate': 'Calculate AQI',
+                'aqi.good': 'Good',
+                'aqi.moderate': 'Moderate',
+                'aqi.unhealthy_sensitive': 'Unhealthy for Sensitive Groups',
+                'aqi.unhealthy': 'Unhealthy',
+                'aqi.very_unhealthy': 'Very Unhealthy',
+                'aqi.hazardous': 'Hazardous',
+                'health.good': 'Excellent conditions for any outdoor activities',
+                'health.moderate': 'Normal activity allowed. Sensitive people may experience minor discomfort',
+                'health.unhealthy_sensitive': 'People with heart and lung diseases, children and elderly should limit prolonged outdoor activities',
+                'health.unhealthy': 'Everyone should limit prolonged outdoor activities. Sensitive groups should avoid outdoor activities',
+                'health.very_unhealthy': 'Everyone should avoid prolonged outdoor activities. Sensitive groups should stay indoors',
+                'health.hazardous': 'Everyone should stay indoors and avoid any outdoor activities'
+            }
+        };
+
+        // AQI Breakpoints (US EPA standard)
+        const aqiBreakpoints = {
+            pm25: [
+                { concentration: [0.0, 12.0], aqi: [0, 50] },
+                { concentration: [12.1, 35.4], aqi: [51, 100] },
+                { concentration: [35.5, 55.4], aqi: [101, 150] },
+                { concentration: [55.5, 150.4], aqi: [151, 200] },
+                { concentration: [150.5, 250.4], aqi: [201, 300] },
+                { concentration: [250.5, 350.4], aqi: [301, 400] },
+                { concentration: [350.5, 500.4], aqi: [401, 500] }
+            ],
+            pm10: [
+                { concentration: [0, 54], aqi: [0, 50] },
+                { concentration: [55, 154], aqi: [51, 100] },
+                { concentration: [155, 254], aqi: [101, 150] },
+                { concentration: [255, 354], aqi: [151, 200] },
+                { concentration: [355, 424], aqi: [201, 300] },
+                { concentration: [425, 504], aqi: [301, 400] },
+                { concentration: [505, 604], aqi: [401, 500] }
+            ],
+            o3: [
+                { concentration: [0.000, 0.054], aqi: [0, 50] },
+                { concentration: [0.055, 0.070], aqi: [51, 100] },
+                { concentration: [0.071, 0.085], aqi: [101, 150] },
+                { concentration: [0.086, 0.105], aqi: [151, 200] },
+                { concentration: [0.106, 0.200], aqi: [201, 300] },
+                { concentration: [0.201, 0.300], aqi: [301, 400] },
+                { concentration: [0.301, 0.500], aqi: [401, 500] }
+            ],
+            co: [
+                { concentration: [0.0, 4.4], aqi: [0, 50] },
+                { concentration: [4.5, 9.4], aqi: [51, 100] },
+                { concentration: [9.5, 12.4], aqi: [101, 150] },
+                { concentration: [12.5, 15.4], aqi: [151, 200] },
+                { concentration: [15.5, 30.4], aqi: [201, 300] },
+                { concentration: [30.5, 40.4], aqi: [301, 400] },
+                { concentration: [40.5, 50.4], aqi: [401, 500] }
+            ],
+            no2: [
+                { concentration: [0, 53], aqi: [0, 50] },
+                { concentration: [54, 100], aqi: [51, 100] },
+                { concentration: [101, 360], aqi: [101, 150] },
+                { concentration: [361, 649], aqi: [151, 200] },
+                { concentration: [650, 1249], aqi: [201, 300] },
+                { concentration: [1250, 1649], aqi: [301, 400] },
+                { concentration: [1650, 2049], aqi: [401, 500] }
+            ],
+            so2: [
+                { concentration: [0, 35], aqi: [0, 50] },
+                { concentration: [36, 75], aqi: [51, 100] },
+                { concentration: [76, 185], aqi: [101, 150] },
+                { concentration: [186, 304], aqi: [151, 200] },
+                { concentration: [305, 604], aqi: [201, 300] },
+                { concentration: [605, 804], aqi: [301, 400] },
+                { concentration: [805, 1004], aqi: [401, 500] }
+            ]
+        };
+
+        // Rounding rules for each pollutant
+        const roundingRules = {
+            pm25: (value) => Math.floor(value * 10) / 10,
+            pm10: (value) => Math.floor(value),
+            o3: (value) => Math.round(value * 1000) / 1000,
+            co: (value) => Math.round(value * 10) / 10,
+            no2: (value) => Math.floor(value),
+            so2: (value) => Math.floor(value)
+        };
+
+        // Utility functions
+        function t(key) {
+            return i18n[appState.currentLang][key] || key;
+        }
+
+        function updateTexts() {
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                element.textContent = t(key);
+            });
+        }
+
+        function calculateIAQI(pollutant, concentration) {
+            const rounded = roundingRules[pollutant](concentration);
+            const breakpoints = aqiBreakpoints[pollutant];
+            
+            for (let i = 0; i < breakpoints.length; i++) {
+                const bp = breakpoints[i];
+                if (rounded >= bp.concentration[0] && rounded <= bp.concentration[1]) {
+                    const cLo = bp.concentration[0];
+                    const cHi = bp.concentration[1];
+                    const iLo = bp.aqi[0];
+                    const iHi = bp.aqi[1];
+                    
+                    const iaqi = Math.round(((iHi - iLo) / (cHi - cLo)) * (rounded - cLo) + iLo);
+                    return { iaqi, rounded, range: `${cLo}-${cHi}` };
+                }
+            }
+            
+            const lastBp = breakpoints[breakpoints.length - 1];
+            return { iaqi: 500, rounded, range: `>${lastBp.concentration[1]}` };
+        }
+
+        function getAQICategory(aqi) {
+            if (aqi <= 50) return { name: 'good', text: t('aqi.good'), class: 'aqi-good' };
+            if (aqi <= 100) return { name: 'moderate', text: t('aqi.moderate'), class: 'aqi-moderate' };
+            if (aqi <= 150) return { name: 'unhealthy_sensitive', text: t('aqi.unhealthy_sensitive'), class: 'aqi-unhealthy-sensitive' };
+            if (aqi <= 200) return { name: 'unhealthy', text: t('aqi.unhealthy'), class: 'aqi-unhealthy' };
+            if (aqi <= 300) return { name: 'very_unhealthy', text: t('aqi.very_unhealthy'), class: 'aqi-very-unhealthy' };
+            return { name: 'hazardous', text: t('aqi.hazardous'), class: 'aqi-hazardous' };
+        }
+
+        function getHealthAdvice(category) {
+            return t(`health.${category.name}`);
+        }
+
+        function getCategoryColor(className) {
+            const colorMap = {
+                'aqi-good': '#00e400',
+                'aqi-moderate': '#ffff00',
+                'aqi-unhealthy-sensitive': '#ff7e00',
+                'aqi-unhealthy': '#ff0000',
+                'aqi-very-unhealthy': '#8f3f97',
+                'aqi-hazardous': '#7e0023'
+            };
+            return colorMap[className] || '#6c757d';
+        }
+
+        // Enhanced chart creation functions
+        function createGaugeChart(aqi, category) {
+            const ctx = document.getElementById('gaugeChart').getContext('2d');
+            
+            if (appState.charts.gauge) {
+                appState.charts.gauge.destroy();
+            }
+
+            appState.charts.gauge = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [aqi, 500 - aqi],
+                        backgroundColor: [getCategoryColor(category.class), '#e9ecef'],
+                        borderWidth: 0,
+                        cutout: '75%'
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        duration: 1500
+                    }
+                }
+            });
+        }
+
+        function updateBreakdownChart(breakdown) {
+            const ctx = document.getElementById('breakdownChart').getContext('2d');
+            
+            if (appState.charts.breakdown) {
+                appState.charts.breakdown.destroy();
+            }
+
+            const pollutants = Object.keys(breakdown);
+            const data = pollutants.map(p => breakdown[p].iaqi);
+            const colors = pollutants.map(p => {
+                const category = getAQICategory(breakdown[p].iaqi);
+                return getCategoryColor(category.class);
+            });
+
+            appState.charts.breakdown = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: pollutants.map(p => p.toUpperCase()),
+                    datasets: [{
+                        label: 'IAQI',
+                        data: data,
+                        backgroundColor: colors,
+                        borderColor: colors,
+                        borderWidth: 2,
+                        borderRadius: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const category = getAQICategory(context.parsed.y);
+                                    return `IAQI: ${context.parsed.y} (${category.text})`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 500,
+                            grid: { color: 'rgba(0,0,0,0.1)' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    },
+                    animation: {
+                        duration: 1500,
+                        easing: 'easeOutBounce'
+                    }
+                }
+            });
+        }
+
+        function updatePieChart(breakdown) {
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            
+            if (appState.charts.pie) {
+                appState.charts.pie.destroy();
+            }
+
+            const pollutants = Object.keys(breakdown);
+            const data = pollutants.map(p => breakdown[p].iaqi);
+            const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
+
+            appState.charts.pie = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: pollutants.map(p => p.toUpperCase()),
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors.slice(0, pollutants.length),
+                        borderWidth: 3,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                    return `${context.label}: ${context.parsed} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        duration: 2000
+                    }
+                }
+            });
+        }
+
+        function updateRadarChart(breakdown) {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            if (appState.charts.radar) {
+                appState.charts.radar.destroy();
+            }
+
+            const pollutants = Object.keys(breakdown);
+            const data = pollutants.map(p => (breakdown[p].iaqi / 500) * 100);
+
+            appState.charts.radar = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: pollutants.map(p => p.toUpperCase()),
+                    datasets: [{
+                        label: 'Уровень загрязнения (%)',
+                        data: data,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 3,
+                        pointRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: { display: true },
+                            suggestedMin: 0,
+                            suggestedMax: 100,
+                            ticks: {
+                                stepSize: 20,
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 2000,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        }
+
+        function updateTrendChart() {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            
+            if (appState.charts.trend) {
+                appState.charts.trend.destroy();
+            }
+
+            const historyData = appState.history.slice(0, 10).reverse();
+            const labels = historyData.map(record => {
+                const date = new Date(record.timestamp);
+                return date.toLocaleDateString(appState.currentLang);
+            });
+            const data = historyData.map(record => record.aqi);
+
+            appState.charts.trend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'AQI',
+                        data: data,
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 500,
+                            grid: { color: 'rgba(0,0,0,0.1)' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    },
+                    animation: {
+                        duration: 2000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            });
+        }
+
+        function updateDetailedTable(breakdown) {
+            const tbody = document.getElementById('detailedTableBody');
+            const units = {
+                pm25: 'μg/m³',
+                pm10: 'μg/m³',
+                o3: 'ppm',
+                co: 'ppm',
+                no2: 'ppb',
+                so2: 'ppb'
+            };
+
+            const rows = Object.keys(breakdown).map(pollutant => {
+                const data = breakdown[pollutant];
+                const category = getAQICategory(data.iaqi);
+                const whoLimit = whoGuidelines[pollutant];
+                const whoPercent = whoLimit ? ((data.rounded / whoLimit) * 100).toFixed(1) : 'N/A';
+                
+                return `
+                    <tr>
+                        <td><strong>${pollutant.toUpperCase()}</strong></td>
+                        <td>${data.rounded} ${units[pollutant]}</td>
+                        <td><strong>${data.iaqi}</strong></td>
+                        <td><span class="badge" style="background-color: ${getCategoryColor(category.class)}; color: ${category.class === 'aqi-moderate' ? '#000' : '#fff'}">${category.text}</span></td>
+                        <td>${whoPercent}%</td>
+                        <td><small class="text-muted">${pollutantSources[pollutant]}</small></td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = rows;
+        }
+
+        function updateWHOComparison(breakdown) {
+            const container = document.getElementById('whoComparisonCards');
+            const cards = Object.keys(breakdown).map(pollutant => {
+                const data = breakdown[pollutant];
+                const whoLimit = whoGuidelines[pollutant];
+                if (!whoLimit) return '';
+
+                const ratio = data.rounded / whoLimit;
+                const isExceeded = ratio > 1;
+                const cardClass = isExceeded ? 'bg-warning' : 'bg-success';
+                const textClass = isExceeded ? 'text-dark' : 'text-white';
+
+                return `
+                    <div class="comparison-card ${cardClass} ${textClass}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><strong>${pollutant.toUpperCase()}</strong></span>
+                            <span>${(ratio * 100).toFixed(1)}% от нормы ВОЗ</span>
+                        </div>
+                        ${isExceeded ? '<small>⚠️ Превышена норма ВОЗ</small>' : '<small>✅ В пределах нормы ВОЗ</small>'}
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = cards;
+            document.getElementById('whoComparison').classList.remove('hidden');
+        }
+
+        // Input synchronization functions
+        function setupInputSync() {
+            const pollutants = ['pm25', 'pm10', 'o3', 'co', 'no2', 'so2', 'co2'];
+            
+            pollutants.forEach(pollutant => {
+                const rangeInput = document.getElementById(`${pollutant}Range`);
+                const numberInput = document.getElementById(`${pollutant}Input`);
+                
+                if (rangeInput && numberInput) {
+                    rangeInput.addEventListener('input', function() {
+                        numberInput.value = this.value;
+                        if (appState.settings.autoCalculate) {
+                            setTimeout(calculateAQI, 300);
+                        }
+                    });
+                    
+                    numberInput.addEventListener('input', function() {
+                        const value = parseFloat(this.value) || 0;
+                        const min = parseFloat(rangeInput.min);
+                        const max = parseFloat(rangeInput.max);
+                        
+                        if (value >= min && value <= max) {
+                            rangeInput.value = value;
+                        }
+                        
+                        if (appState.settings.autoCalculate) {
+                            setTimeout(calculateAQI, 300);
+                        }
+                    });
+                }
+            });
+        }
+
+        // Notification functions
+        function showNotification(message, type = 'warning') {
+            const toast = document.getElementById('notificationToast');
+            const toastBody = document.getElementById('toastBody');
+            
+            toastBody.textContent = message;
+            
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+            
+            if (appState.settings.soundNotifications && type === 'danger') {
+                // Play notification sound (if available)
+                try {
+                    const audio = new Audio('data:audio/wav;base64,UklGRvIAAABXQVZFZm10IBAAAAABAAEAQD/jAAAcAUXH/wAAAgAEAGRhdGHOAAAAAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==');
+                    audio.play();
+                } catch (e) {
+                    console.log('Sound notification not available');
+                }
+            }
+        }
+
+        // Theme functions
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            appState.currentTheme = newTheme;
+            
+            const icon = document.getElementById('themeIcon');
+            icon.className = newTheme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+            
+            localStorage.setItem('aqiAppTheme', newTheme);
+        }
+
+        // Storage functions
+        function saveSettings() {
+            localStorage.setItem('aqiAppSettings', JSON.stringify(appState.settings));
+        }
+
+        function loadSettings() {
+            const saved = localStorage.getItem('aqiAppSettings');
+            if (saved) {
+                appState.settings = { ...appState.settings, ...JSON.parse(saved) };
+            }
+            applySettings();
+        }
+
+        function applySettings() {
+            appState.currentLang = appState.settings.language;
+            document.documentElement.lang = appState.currentLang;
+            document.getElementById('languageSelect').value = appState.currentLang;
+            updateTexts();
+
+            Object.keys(appState.settings.showPollutants).forEach(pollutant => {
+                const element = document.querySelector(`[data-pollutant="${pollutant}"]`);
+                const checkbox = document.getElementById(`show${pollutant.toUpperCase()}`);
+                if (element && checkbox) {
+                    element.classList.toggle('hidden', !appState.settings.showPollutants[pollutant]);
+                    checkbox.checked = appState.settings.showPollutants[pollutant];
+                }
+            });
+
+            document.getElementById('comfortSection').classList.toggle('hidden', !appState.settings.showComfort);
+            document.getElementById('showComfort').checked = appState.settings.showComfort;
+            document.getElementById('soundNotifications').checked = appState.settings.soundNotifications;
+            document.getElementById('dangerAlerts').checked = appState.settings.dangerAlerts;
+            document.getElementById('autoCalculate').checked = appState.settings.autoCalculate;
+        }
+
+        function saveHistory() {
+            localStorage.setItem('aqiAppHistory', JSON.stringify(appState.history));
+        }
+
+        function loadHistory() {
+            const saved = localStorage.getItem('aqiAppHistory');
+            if (saved) {
+                appState.history = JSON.parse(saved);
+            }
+            updateHistoryDisplay();
+        }
+
+        function addToHistory(calculation) {
+            appState.history.unshift({
+                ...calculation,
+                timestamp: new Date().toISOString()
+            });
+            
+            if (appState.history.length > 50) {
+                appState.history = appState.history.slice(0, 50);
+            }
+            
+            saveHistory();
+            updateHistoryDisplay();
+        }
+
+        function updateHistoryDisplay() {
+            const historyList = document.getElementById('historyList');
+            
+            if (appState.history.length === 0) {
+                historyList.innerHTML = '<div class="text-muted text-center">История пуста</div>';
+                return;
+            }
+
+            historyList.innerHTML = appState.history.map(record => {
+                const date = new Date(record.timestamp);
+                const category = getAQICategory(record.aqi);
+                
+                return `
+                    <div class="card mb-2" style="border-left: 4px solid ${getCategoryColor(category.class)}">
+                        <div class="card-body py-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>AQI ${record.aqi}</strong>
+                                    <span class="badge ms-2" style="background-color: ${getCategoryColor(category.class)}; color: ${category.class === 'aqi-moderate' ? '#000' : '#fff'}">${category.text}</span>
+                                </div>
+                                <small class="text-muted">${date.toLocaleString(appState.currentLang)}</small>
+                            </div>
+                            <small class="text-muted">${Object.keys(record.breakdown).join(', ')}</small>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Export functions
+        function exportResults() {
+            if (!appState.lastCalculation) {
+                alert('Нет данных для экспорта');
+                return;
+            }
+
+            const data = {
+                timestamp: new Date().toISOString(),
+                aqi: appState.lastCalculation.aqi,
+                category: appState.lastCalculation.category,
+                breakdown: appState.lastCalculation.breakdown
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `aqi-results-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportHistory() {
+            if (appState.history.length === 0) {
+                alert('История пуста');
+                return;
+            }
+
+            const blob = new Blob([JSON.stringify(appState.history, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `aqi-history-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Global functions for HTML event handlers
+        window.calculateAQI = function() {
+            const button = document.querySelector('.calculate-btn');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<div class="loading-spinner"></div> Расчет...';
+            button.disabled = true;
+
+            setTimeout(() => {
+                const pollutants = ['pm25', 'pm10', 'o3', 'co', 'no2', 'so2'];
+                const inputs = {};
+                const breakdown = {};
+                
+                pollutants.forEach(pollutant => {
+                    const input = document.getElementById(`${pollutant}Input`);
+                    const value = parseFloat(input.value);
+                    if (!isNaN(value) && value > 0 && appState.settings.showPollutants[pollutant]) {
+                        inputs[pollutant] = value;
+                    }
+                });
+
+                if (Object.keys(inputs).length === 0) {
+                    showNotification('Введите хотя бы одно значение загрязнителя');
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                    return;
+                }
+
+                let maxAQI = 0;
+                Object.keys(inputs).forEach(pollutant => {
+                    const result = calculateIAQI(pollutant, inputs[pollutant]);
+                    breakdown[pollutant] = result;
+                    maxAQI = Math.max(maxAQI, result.iaqi);
+                });
+
+                const category = getAQICategory(maxAQI);
+                const healthAdvice = getHealthAdvice(category);
+
+                // Update result display
+                const resultCard = document.getElementById('resultCard');
+                resultCard.className = `result-card ${category.class}`;
+                resultCard.classList.remove('hidden');
+
+                document.getElementById('aqiValue').textContent = maxAQI;
+                document.getElementById('aqiCategory').textContent = category.text;
+                document.getElementById('aqiAdvice').textContent = healthAdvice;
+
+                // Create gauge chart
+                createGaugeChart(maxAQI, category);
+
+                // Update health impact
+                const healthImpact = document.getElementById('healthImpact');
+                const healthInfo = document.getElementById('healthInfo');
+                healthInfo.textContent = healthAdvice;
+                healthImpact.className = `health-impact ${maxAQI > 100 ? 'warning' : ''}`;
+                healthImpact.classList.remove('hidden');
+
+                // Update all charts
+                updateBreakdownChart(breakdown);
+                updatePieChart(breakdown);
+                updateRadarChart(breakdown);
+                updateTrendChart();
+                updateDetailedTable(breakdown);
+                updateWHOComparison(breakdown);
+
+                // Check for dangerous levels
+                if (maxAQI > 150 && appState.settings.dangerAlerts) {
+                    showNotification('Обнаружен опасный уровень загрязнения воздуха! Ограничьте активности на улице.', 'danger');
+                }
+
+                const calculation = {
+                    aqi: maxAQI,
+                    category: category.name,
+                    breakdown: breakdown
+                };
+                
+                appState.lastCalculation = calculation;
+                addToHistory(calculation);
+
+                // Switch to result tab
+                document.getElementById('result-tab').click();
+
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }, 500);
+        };
+
+        window.showSettings = function() {
+            const modal = new bootstrap.Modal(document.getElementById('settingsModal'));
+            modal.show();
+        };
+
+        window.clearHistory = function() {
+            if (confirm('Очистить всю историю расчетов?')) {
+                appState.history = [];
+                saveHistory();
+                updateHistoryDisplay();
+                updateTrendChart();
+            }
+        };
+
+        window.resetSettings = function() {
+            if (confirm('Сбросить все настройки к значениям по умолчанию?')) {
+                appState.settings = {
+                    showPollutants: {
+                        pm25: true, pm10: true, o3: true,
+                        co: true, no2: true, so2: true
+                    },
+                    showComfort: false,
+                    language: 'ru',
+                    soundNotifications: true,
+                    dangerAlerts: true,
+                    autoCalculate: false
+                };
+                saveSettings();
+                applySettings();
+            }
+        };
+
+        window.toggleTheme = toggleTheme;
+        window.exportResults = exportResults;
+        window.exportHistory = exportHistory;
+
+        // Event listeners
+        document.getElementById('languageSelect').addEventListener('change', function() {
+            appState.settings.language = this.value;
+            saveSettings();
+            applySettings();
+        });
+
+        ['pm25', 'pm10', 'o3', 'co', 'no2', 'so2'].forEach(pollutant => {
+            const checkbox = document.getElementById(`show${pollutant.toUpperCase()}`);
+            checkbox.addEventListener('change', function() {
+                appState.settings.showPollutants[pollutant] = this.checked;
+                saveSettings();
+                applySettings();
+            });
+        });
+
+        ['showComfort', 'soundNotifications', 'dangerAlerts', 'autoCalculate'].forEach(setting => {
+            document.getElementById(setting).addEventListener('change', function() {
+                const key = setting.replace('show', '').replace('C', 'c').replace(/([A-Z])/g, (match, letter) => letter.toLowerCase());
+                if (setting === 'showComfort') {
+                    appState.settings.showComfort = this.checked;
+                } else {
+                    appState.settings[setting] = this.checked;
+                }
+                saveSettings();
+                applySettings();
+            });
+        });
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load theme
+            const savedTheme = localStorage.getItem('aqiAppTheme') || 'light';
+            document.documentElement.setAttribute('data-bs-theme', savedTheme);
+            appState.currentTheme = savedTheme;
+            
+            const icon = document.getElementById('themeIcon');
+            icon.className = savedTheme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+
+            loadSettings();
+            loadHistory();
+            setupInputSync();
+            
+            // Initialize tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+            
+            // Register service worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js').catch(console.error);
+            }
+        });
+    </script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        const swCode = `
+            const CACHE_NAME = 'aqi-calculator-pro-v2';
+            const urlsToCache = [
+                '.',
+                './index.html',
+                'https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css',
+                'https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css',
+                'https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js'
+            ];
+
+            self.addEventListener('install', function(event) {
+                event.waitUntil(
+                    caches.open(CACHE_NAME)
+                        .then(function(cache) {
+                            return cache.addAll(urlsToCache);
+                        })
+                );
+            });
+
+            self.addEventListener('fetch', function(event) {
+                event.respondWith(
+                    caches.match(event.request)
+                        .then(function(response) {
+                            if (response) {
+                                return response;
+                            }
+                            return fetch(event.request);
+                        }
+                    )
+                );
+            });
+        `;
+
+        if ('serviceWorker' in navigator) {
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(swUrl).catch(console.error);
+        }
+    </script>
+
+    <!-- PWA Manifest -->
+    <script>
+        const manifest = {
+            "name": "AQI Calculator Pro",
+            "short_name": "AQI Pro",
+            "description": "Professional Air Quality Index Calculator",
+            "start_url": "./",
+            "display": "standalone",
+            "background_color": "#ffffff",
+            "theme_color": "#007bff",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23667eea;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23764ba2;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' fill='url(%23grad)'/%3E%3Ctext x='50' y='60' text-anchor='middle' fill='white' font-size='18' font-weight='bold'%3EAQI%3C/text%3E%3C/svg%3E",
+                    "sizes": "192x192",
+                    "type": "image/svg+xml"
+                },
+                {
+                    "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23667eea;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23764ba2;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' fill='url(%23grad)'/%3E%3Ctext x='50' y='60' text-anchor='middle' fill='white' font-size='18' font-weight='bold'%3EAQI%3C/text%3E%3C/svg%3E",
+                    "sizes": "512x512",
+                    "type": "image/svg+xml"
+                }
+            ]
+        };
+
+        const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+        const manifestUrl = URL.createObjectURL(manifestBlob);
+        const manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        manifestLink.href = manifestUrl;
+        document.head.appendChild(manifestLink);
+    </script>
+</body>
+</html>
