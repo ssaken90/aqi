@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Геометрический Визуализатор</title>
+    <title>3D Геометриялық Визуализатор</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         * {
@@ -367,14 +367,14 @@
 </head>
 <body>
     <div class="header">
-        <h1>3D Геометрический Визуализатор</h1>
-        <p>Выберите фигуру, задайте размеры и исследуйте в 3D</p>
+        <h1>3D Геометриялық Визуализатор</h1>
+        <p>Пішінді таңдап, өлшемдерін беріп, 3D форматында зерттеңіз</p>
     </div>
 
     <div class="main-container">
         <div class="controls-panel">
             <div class="section">
-                <h3>Выберите фигуру</h3>
+                <h3>Пішінді таңдаңыз</h3>
                 <div class="shape-buttons">
                     <div class="shape-btn active" data-shape="cube">
                         <span class="shape-icon">⬜</span>
@@ -404,9 +404,9 @@
             </div>
 
             <div class="section">
-                <h3>Размеры</h3>
+                <h3>Өлшемдер</h3>
                 <div class="inputs-grid" id="inputsContainer">
-                    <!-- Динамически генерируемые поля ввода -->
+                    <!-- Динамикалық түрде жасалатын енгізу өрістері -->
                 </div>
                 <div class="units-selector">
                     <div class="unit-btn active" data-unit="cm">см</div>
@@ -416,7 +416,7 @@
             </div>
 
             <div class="section">
-                <h3>Цвет</h3>
+                <h3>Түс</h3>
                 <div class="color-picker">
                     <div class="color-btn active" style="background: #2196f3" data-color="#2196f3"></div>
                     <div class="color-btn" style="background: #f44336" data-color="#f44336"></div>
@@ -430,27 +430,27 @@
             </div>
 
             <div class="action-buttons">
-                <button class="btn btn-primary" id="showBtn">Показать</button>
-                <button class="btn btn-secondary" id="clearBtn">Очистить</button>
+                <button class="btn btn-primary" id="showBtn">Көрсету</button>
+                <button class="btn btn-secondary" id="clearBtn">Тазалау</button>
             </div>
 
             <div class="stats-panel" id="statsPanel" style="display: none;">
-                <h3>Характеристики</h3>
+                <h3>Сипаттамалар</h3>
                 <div class="stats-grid" id="statsGrid">
-                    <!-- Динамически генерируемая статистика -->
+                    <!-- Динамикалық түрде жасалатын статистика -->
                 </div>
             </div>
         </div>
 
         <div class="viewer-container">
             <div class="viewer-controls">
-                <button class="control-btn" id="resetViewBtn" title="Сброс камеры">🎯</button>
-                <button class="control-btn" id="toggleGridBtn" title="Показать/скрыть сетку">⊞</button>
+                <button class="control-btn" id="resetViewBtn" title="Камераны бастапқы қалпына қайтару">🎯</button>
+                <button class="control-btn" id="toggleGridBtn" title="Торды көрсету/жасыру">⊞</button>
             </div>
             <div class="mobile-hint" id="mobileHint">
-                📱 Поворачивайте одним пальцем • Увеличивайте двумя пальцами
+                📱 Бір саусақпен бұрау • Екі саусақпен ұлғайту
             </div>
-            <div class="loading" id="loadingText">Выберите фигуру и нажмите "Показать"</div>
+            <div class="loading" id="loadingText">Пішінді таңдап, "Көрсету" түймесін басыңыз</div>
             <canvas id="canvas3d"></canvas>
         </div>
     </div>
@@ -471,12 +471,12 @@
                 this.currentUnit = 'cm';
                 
                 this.shapes = {
-                    cube: { params: ['side'], labels: ['Сторона'] },
-                    cylinder: { params: ['radius', 'height'], labels: ['Радиус', 'Высота'] },
+                    cube: { params: ['side'], labels: ['Қабырға'] },
+                    cylinder: { params: ['radius', 'height'], labels: ['Радиус', 'Биіктік'] },
                     sphere: { params: ['radius'], labels: ['Радиус'] },
-                    pyramid: { params: ['base', 'height'], labels: ['Сторона основания', 'Высота'] },
-                    cone: { params: ['radius', 'height'], labels: ['Радиус', 'Высота'] },
-                    box: { params: ['length', 'width', 'height'], labels: ['Длина', 'Ширина', 'Высота'] }
+                    pyramid: { params: ['base', 'height'], labels: ['Табан қабырғасы', 'Биіктік'] },
+                    cone: { params: ['radius', 'height'], labels: ['Радиус', 'Биіктік'] },
+                    box: { params: ['length', 'width', 'height'], labels: ['Ұзындық', 'Ені', 'Биіктік'] }
                 };
 
                 this.unitFactors = {
@@ -862,7 +862,7 @@
             showShape() {
                 const values = this.getInputValues();
                 if (!values) {
-                    alert('Пожалуйста, введите корректные значения');
+                    alert('Дұрыс мәндерді енгізіңіз');
                     return;
                 }
 
@@ -894,11 +894,11 @@
                 
                 grid.innerHTML = `
                     <div class="stat-item">
-                        <span class="stat-label">Объем:</span>
+                        <span class="stat-label">Көлем:</span>
                         <span class="stat-value">${stats.volume}</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-label">Площадь поверхности:</span>
+                        <span class="stat-label">Бет ауданы:</span>
                         <span class="stat-value">${stats.surfaceArea}</span>
                     </div>
                     <div class="stat-item">
@@ -920,6 +920,7 @@
                 
                 document.getElementById('statsPanel').style.display = 'none';
                 document.getElementById('loadingText').style.display = 'block';
+                document.getElementById('loadingText').textContent = 'Пішінді таңдап, "Көрсету" түймесін басыңыз';
             }
 
             resetView() {
