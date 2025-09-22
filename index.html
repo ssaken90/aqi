@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="kz">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -383,7 +383,7 @@
     </div>
 
     <!-- Theme Toggle -->
-    <button class="theme-toggle" onclick="toggleTheme()" title="Переключить тему">
+    <button class="theme-toggle" onclick="toggleTheme()" data-i18n-title="button.theme">
         <i class="bi bi-moon-fill" id="themeIcon"></i>
     </button>
 
@@ -452,9 +452,9 @@
                                     PM2.5 (μg/m³)
                                     <i class="bi bi-info-circle info-tooltip ms-1" 
                                        data-bs-toggle="tooltip" 
-                                       title="Твердые частицы диаметром менее 2.5 микрометров. Наиболее опасны для здоровья, проникают в альвеолы легких."></i>
+                                       title="Диаметрі 2.5 микрометрден кіші қатты бөлшектер. Денсаулыққа ең қауіпті, өкпенің альвеолаларына енеді."></i>
                                 </h6>
-                                <small class="text-muted">Норма ВОЗ: до 15 μg/m³ (24ч)</small>
+                                <small class="text-muted">ДДҰ нормасы: 15 μg/m³ дейін (24с)</small>
                             </div>
                         </div>
                         <div class="dual-input">
@@ -464,7 +464,7 @@
                                    id="pm25Input" min="0" max="500" step="0.1" placeholder="0.0">
                         </div>
                         <div class="mt-2">
-                            <small class="text-muted">Диапазон: 0 - 500 μg/m³</small>
+                            <small class="text-muted">Ауқым: 0 - 500 μg/m³</small>
                         </div>
                     </div>
 
@@ -479,9 +479,9 @@
                                     PM10 (μg/m³)
                                     <i class="bi bi-info-circle info-tooltip ms-1" 
                                        data-bs-toggle="tooltip" 
-                                       title="Твердые частицы диаметром менее 10 микрометров. Включают пыль, пыльцу, споры."></i>
+                                       title="Диаметрі 10 микрометрден кіші қатты бөлшектер. Шаң, гүл тозаңы, споралар кіреді."></i>
                                 </h6>
-                                <small class="text-muted">Норма ВОЗ: до 45 μg/m³ (24ч)</small>
+                                <small class="text-muted">ДДҰ нормасы: 45 μg/m³ дейін (24с)</small>
                             </div>
                         </div>
                         <div class="dual-input">
@@ -506,9 +506,9 @@
                                     O₃ (ppm)
                                     <i class="bi bi-info-circle info-tooltip ms-1" 
                                        data-bs-toggle="tooltip" 
-                                       title="Приземный озон, образуется в результате фотохимических реакций. Раздражает дыхательные пути."></i>
+                                       title="Жер бетіндегі озон, фотохимиялық реакциялар нәтижесінде түзіледі. Тыныс алу жолдарын тітіркендіреді."></i>
                                 </h6>
-                                <small class="text-muted">8-часовое среднее</small>
+                                <small class="text-muted">8 сағаттық орташа мән</small>
                             </div>
                         </div>
                         <div class="dual-input">
@@ -533,9 +533,9 @@
                                     CO (ppm)
                                     <i class="bi bi-info-circle info-tooltip ms-1" 
                                        data-bs-toggle="tooltip" 
-                                       title="Угарный газ, образуется при неполном сгорании. Смертельно опасен в высоких концентрациях."></i>
+                                       title="Көміртегі газы, толық жанбау кезінде түзіледі. Жоғары концентрацияда өлімге қауіпті."></i>
                                 </h6>
-                                <small class="text-muted">8-часовое среднее</small>
+                                <small class="text-muted">8 сағаттық орташа мән</small>
                             </div>
                         </div>
                         <div class="dual-input">
@@ -560,9 +560,9 @@
                                     NO₂ (ppb)
                                     <i class="bi bi-info-circle info-tooltip ms-1" 
                                        data-bs-toggle="tooltip" 
-                                       title="Диоксид азота, в основном от автотранспорта. Вызывает воспаление дыхательных путей."></i>
+                                       title="Азот диоксиді, негізінен автокөліктерден. Тыныс алу жолдарының қабынуын тудырады."></i>
                                 </h6>
-                                <small class="text-muted">1-часовое среднее</small>
+                                <small class="text-muted">1 сағаттық орташа мән</small>
                             </div>
                         </div>
                         <div class="dual-input">
@@ -587,9 +587,9 @@
                                     SO₂ (ppb)
                                     <i class="bi bi-info-circle info-tooltip ms-1" 
                                        data-bs-toggle="tooltip" 
-                                       title="Диоксид серы, от промышленности и энергетики. Вызывает кислотные дожди и проблемы с дыханием."></i>
+                                       title="Күкірт диоксиді, өнеркәсіп пен энергетикадан. Қышқылды жаңбырларды тудырады және тыныс алуда проблемалар жасайды."></i>
                                 </h6>
-                                <small class="text-muted">1-часовое среднее</small>
+                                <small class="text-muted">1 сағаттық орташа мән</small>
                             </div>
                         </div>
                         <div class="dual-input">
@@ -605,7 +605,7 @@
 
                     <!-- Comfort Parameters -->
                     <div id="comfortSection" class="hidden">
-                        <h5 class="mt-4 mb-3" data-i18n="input.comfort">Параметры комфорта</h5>
+                        <h5 class="mt-4 mb-3" data-i18n="input.comfort">Жайлылық параметрлері</h5>
                         
                         <div class="pollutant-control">
                             <div class="d-flex align-items-center mb-3">
@@ -614,7 +614,7 @@
                                 </div>
                                 <div class="flex-grow-1">
                                     <h6 class="mb-1">CO₂ (ppm)</h6>
-                                    <small class="text-muted">Комфорт: 400-600 ppm</small>
+                                    <small class="text-muted">Жайлылық: 400-600 ppm</small>
                                 </div>
                             </div>
                             <div class="dual-input">
@@ -640,19 +640,19 @@
                         <div class="aqi-advice" id="aqiAdvice">--</div>
                         
                         <button class="btn export-btn mt-3" onclick="exportResults()">
-                            <i class="bi bi-download me-2"></i>Экспорт результатов
+                            <i class="bi bi-download me-2"></i><span data-i18n="button.export">Нәтижелерді экспорттау</span>
                         </button>
                     </div>
                     
                     <!-- Health Impact -->
                     <div id="healthImpact" class="health-impact hidden">
-                        <h6><i class="bi bi-heart-pulse me-2"></i>Влияние на здоровье</h6>
+                        <h6><i class="bi bi-heart-pulse me-2"></i><span data-i18n="result.health">Денсаулыққа әсері</span></h6>
                         <div id="healthInfo"></div>
                     </div>
 
                     <!-- WHO Comparison -->
                     <div id="whoComparison" class="hidden">
-                        <h6 class="mt-3 mb-2">Сравнение с нормами ВОЗ</h6>
+                        <h6 class="mt-3 mb-2" data-i18n="result.who_comparison">ДДҰ нормаларымен салыстыру</h6>
                         <div id="whoComparisonCards"></div>
                     </div>
                 </div>
@@ -666,7 +666,7 @@
                         <div class="chart-card">
                             <h6 class="chart-title">
                                 <i class="bi bi-bar-chart chart-icon"></i>
-                                Вклад загрязнителей (IAQI)
+                                <span data-i18n="analytics.breakdown">Ластағыштардың үлесі (IAQI)</span>
                             </h6>
                             <canvas id="breakdownChart" height="300"></canvas>
                         </div>
@@ -675,7 +675,7 @@
                         <div class="chart-card">
                             <h6 class="chart-title">
                                 <i class="bi bi-pie-chart chart-icon"></i>
-                                Распределение загрязнителей
+                                <span data-i18n="analytics.distribution">Ластағыштардың таралуы</span>
                             </h6>
                             <canvas id="pieChart" height="300"></canvas>
                         </div>
@@ -684,7 +684,7 @@
                         <div class="chart-card">
                             <h6 class="chart-title">
                                 <i class="bi bi-hexagon chart-icon"></i>
-                                Профиль загрязнения
+                                <span data-i18n="analytics.profile">Ластану профилі</span>
                             </h6>
                             <canvas id="radarChart" height="300"></canvas>
                         </div>
@@ -693,7 +693,7 @@
                         <div class="chart-card">
                             <h6 class="chart-title">
                                 <i class="bi bi-graph-up chart-icon"></i>
-                                Тренд AQI
+                                <span data-i18n="analytics.trend">AQI тренді</span>
                             </h6>
                             <canvas id="trendChart" height="300"></canvas>
                         </div>
@@ -703,23 +703,23 @@
                     <div class="chart-card mt-3">
                         <h6 class="chart-title">
                             <i class="bi bi-table chart-icon"></i>
-                            Детальная информация
+                            <span data-i18n="analytics.detailed">Толық ақпарат</span>
                         </h6>
                         <div class="table-responsive">
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Загрязнитель</th>
-                                        <th>Концентрация</th>
-                                        <th>IAQI</th>
-                                        <th>Категория</th>
-                                        <th>% от нормы ВОЗ</th>
-                                        <th>Источники</th>
+                                        <th data-i18n="breakdown.pollutant">Ластағыш</th>
+                                        <th data-i18n="breakdown.concentration">Концентрация</th>
+                                        <th data-i18n="breakdown.iaqi">IAQI</th>
+                                        <th data-i18n="breakdown.category">Санат</th>
+                                        <th data-i18n="analytics.who_percent">ДДҰ нормасынан %</th>
+                                        <th data-i18n="analytics.sources">Көздер</th>
                                     </tr>
                                 </thead>
                                 <tbody id="detailedTableBody">
                                     <tr>
-                                        <td colspan="6" class="text-center text-muted">Выполните расчет для просмотра данных</td>
+                                        <td colspan="6" class="text-center text-muted" data-i18n="breakdown.no_data">Деректерді көру үшін есептеу жүргізіңіз</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -739,15 +739,15 @@
                             </h6>
                             <div>
                                 <button class="btn btn-outline-primary btn-sm me-2" onclick="exportHistory()">
-                                    <i class="bi bi-download"></i> Экспорт
+                                    <i class="bi bi-download"></i> <span data-i18n="button.export">Экспорт</span>
                                 </button>
                                 <button class="btn btn-outline-danger btn-sm" onclick="clearHistory()">
-                                    <i class="bi bi-trash"></i> Очистить
+                                    <i class="bi bi-trash"></i> <span data-i18n="history.clear">Тазалау</span>
                                 </button>
                             </div>
                         </div>
                         <div id="historyList">
-                            <div class="text-muted text-center">История пуста</div>
+                            <div class="text-muted text-center" data-i18n="history.empty">Тарих бос</div>
                         </div>
                     </div>
                 </div>
@@ -760,7 +760,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">
-                            <i class="bi bi-gear me-2"></i>Настройки
+                            <i class="bi bi-gear me-2"></i><span data-i18n="settings.title">Баптаулар</span>
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
@@ -793,7 +793,7 @@
                             <div class="col-md-6">
                                 <!-- Pollutant Visibility -->
                                 <div class="mb-3">
-                                    <label class="form-label">Отображаемые загрязнители</label>
+                                    <label class="form-label" data-i18n="settings.pollutants">Көрсетілетін ластағыштар</label>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="showPM25" checked>
                                         <label class="form-check-label" for="showPM25">PM2.5</label>
@@ -824,19 +824,19 @@
                                 <div class="mb-3">
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="showComfort">
-                                        <label class="form-check-label" for="showComfort">Показывать параметры комфорта</label>
+                                        <label class="form-check-label" for="showComfort" data-i18n="settings.show_comfort">Жайлылық параметрлерін көрсету</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="autoCalculate">
-                                        <label class="form-check-label" for="autoCalculate">Автоматический расчет при изменении</label>
+                                        <label class="form-check-label" for="autoCalculate" data-i18n="settings.auto">Өзгергенде автоматты есептеу</label>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" onclick="resetSettings()">Сброс к умолчанию</button>
-                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Сохранить изменения</button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="resetSettings()" data-i18n="settings.reset">Бастапқы күйге келтіру</button>
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" data-i18n="settings.save">Өзгерістерді сақтау</button>
                     </div>
                 </div>
             </div>
@@ -857,7 +857,7 @@
     <script type="module">
         // Global state management
         const appState = {
-            currentLang: 'ru',
+            currentLang: 'kz',
             currentTheme: 'light',
             settings: {
                 showPollutants: {
@@ -869,7 +869,7 @@
                     so2: true
                 },
                 showComfort: false,
-                language: 'ru',
+                language: 'kz',
                 soundNotifications: true,
                 dangerAlerts: true,
                 autoCalculate: false
@@ -900,6 +900,58 @@
 
         // Enhanced internationalization
         const i18n = {
+            kz: {
+                'app.title': 'AQI Калькуляторы Pro',
+                'app.subtitle': 'Ауа сапасының кәсіби калькуляторы',
+                'nav.input': 'Деректерді енгізу',
+                'nav.result': 'Нәтиже',
+                'nav.analytics': 'Аналитика',
+                'nav.history': 'Тарих',
+                'input.comfort': 'Жайлылық параметрлері',
+                'result.comfort': 'Үйдегі жайлылық',
+                'result.health': 'Денсаулыққа әсері',
+                'result.who_comparison': 'ДДҰ нормаларымен салыстыру',
+                'breakdown.title': 'Ластағыштар бойынша детализация',
+                'breakdown.pollutant': 'Ластағыш',
+                'breakdown.concentration': 'Концентрация',
+                'breakdown.iaqi': 'IAQI',
+                'breakdown.category': 'Санат',
+                'breakdown.no_data': 'Детализацияны көру үшін есептеу жүргізіңіз',
+                'analytics.breakdown': 'Ластағыштардың үлесі (IAQI)',
+                'analytics.distribution': 'Ластағыштардың таралуы',
+                'analytics.profile': 'Ластану профилі',
+                'analytics.trend': 'AQI тренді',
+                'analytics.detailed': 'Толық ақпарат',
+                'analytics.who_percent': 'ДДҰ нормасынан %',
+                'analytics.sources': 'Көздер',
+                'history.title': 'Есептеулер тарихы',
+                'history.clear': 'Тазалау',
+                'history.empty': 'Тарих бос',
+                'settings.title': 'Баптаулар',
+                'settings.language': 'Интерфейс тілі',
+                'settings.notifications': 'Хабарландырулар',
+                'settings.sound': 'Дыбыстық хабарландырулар',
+                'settings.danger': 'Қауіп туралы ескертулер',
+                'settings.pollutants': 'Көрсетілетін ластағыштар',
+                'settings.show_comfort': 'Жайлылық параметрлерін көрсету',
+                'settings.auto': 'Өзгергенде автоматты есептеу',
+                'settings.reset': 'Бастапқы күйге келтіру',
+                'settings.save': 'Өзгерістерді сақтау',
+                'button.calculate': 'AQI есептеу',
+                'button.export': 'Экспорттау',
+                'aqi.good': 'Жақсы',
+                'aqi.moderate': 'Орташа',
+                'aqi.unhealthy_sensitive': 'Сезімтал топтар үшін зиянды',
+                'aqi.unhealthy': 'Зиянды',
+                'aqi.very_unhealthy': 'Өте зиянды',
+                'aqi.hazardous': 'Қауіпті',
+                'health.good': 'Сырттағы кез келген белсенділік үшін тамаша жағдай',
+                'health.moderate': 'Қалыпты белсенділік рұқсат етіледі. Сезімтал адамдар аз ғана дискомфорт сезінуі мүмкін',
+                'health.unhealthy_sensitive': 'Жүрек-тамыр және өкпе ауруларымен ауыратын адамдар, балалар мен қарттар сырттағы ұзақ белсенділікті шектеуі тиіс',
+                'health.unhealthy': 'Барлығы сырттағы ұзақ белсенділікті шектеуі тиіс. Сезімтал топтар сырттағы белсенділіктен бас тартуы тиіс',
+                'health.very_unhealthy': 'Барлығы сырттағы ұзақ белсенділіктен бас тартуы тиіс. Сезімтал топтар жабық жерде болуы тиіс',
+                'health.hazardous': 'Барлығы жабық жерде болып, сырттағы кез келген белсенділіктен бас тартуы тиіс'
+            },
             ru: {
                 'app.title': 'Калькулятор AQI Pro',
                 'app.subtitle': 'Профессиональный калькулятор качества воздуха',
@@ -907,7 +959,38 @@
                 'nav.result': 'Результат',
                 'nav.analytics': 'Аналитика',
                 'nav.history': 'История',
+                'input.comfort': 'Параметры комфорта',
+                'result.comfort': 'Комфорт в помещении',
+                'result.health': 'Влияние на здоровье',
+                'result.who_comparison': 'Сравнение с нормами ВОЗ',
+                'breakdown.title': 'Детализация по загрязнителям',
+                'breakdown.pollutant': 'Загрязнитель',
+                'breakdown.concentration': 'Концентрация',
+                'breakdown.iaqi': 'IAQI',
+                'breakdown.category': 'Категория',
+                'breakdown.no_data': 'Выполните расчет для просмотра детализации',
+                'analytics.breakdown': 'Вклад загрязнителей (IAQI)',
+                'analytics.distribution': 'Распределение загрязнителей',
+                'analytics.profile': 'Профиль загрязнения',
+                'analytics.trend': 'Тренд AQI',
+                'analytics.detailed': 'Детальная информация',
+                'analytics.who_percent': '% от нормы ВОЗ',
+                'analytics.sources': 'Источники',
+                'history.title': 'История расчетов',
+                'history.clear': 'Очистить',
+                'history.empty': 'История пуста',
+                'settings.title': 'Настройки',
+                'settings.language': 'Язык интерфейса',
+                'settings.notifications': 'Уведомления',
+                'settings.sound': 'Звуковые уведомления',
+                'settings.danger': 'Предупреждения об опасности',
+                'settings.pollutants': 'Отображаемые загрязнители',
+                'settings.show_comfort': 'Показывать параметры комфорта',
+                'settings.auto': 'Автоматический расчет при изменении',
+                'settings.reset': 'Сброс к умолчанию',
+                'settings.save': 'Сохранить изменения',
                 'button.calculate': 'Рассчитать AQI',
+                'button.export': 'Экспорт',
                 'aqi.good': 'Хорошо',
                 'aqi.moderate': 'Умеренно',
                 'aqi.unhealthy_sensitive': 'Вредно для чувствительных групп',
@@ -928,7 +1011,38 @@
                 'nav.result': 'Result',
                 'nav.analytics': 'Analytics',
                 'nav.history': 'History',
+                'input.comfort': 'Comfort Parameters',
+                'result.comfort': 'Indoor Comfort',
+                'result.health': 'Health Impact',
+                'result.who_comparison': 'WHO Guidelines Comparison',
+                'breakdown.title': 'Pollutant Breakdown',
+                'breakdown.pollutant': 'Pollutant',
+                'breakdown.concentration': 'Concentration',
+                'breakdown.iaqi': 'IAQI',
+                'breakdown.category': 'Category',
+                'breakdown.no_data': 'Perform calculation to view breakdown',
+                'analytics.breakdown': 'Pollutant Contribution (IAQI)',
+                'analytics.distribution': 'Pollutant Distribution',
+                'analytics.profile': 'Pollution Profile',
+                'analytics.trend': 'AQI Trend',
+                'analytics.detailed': 'Detailed Information',
+                'analytics.who_percent': '% of WHO Guidelines',
+                'analytics.sources': 'Sources',
+                'history.title': 'Calculation History',
+                'history.clear': 'Clear',
+                'history.empty': 'History is empty',
+                'settings.title': 'Settings',
+                'settings.language': 'Interface Language',
+                'settings.notifications': 'Notifications',
+                'settings.sound': 'Sound Notifications',
+                'settings.danger': 'Danger Alerts',
+                'settings.pollutants': 'Visible Pollutants',
+                'settings.show_comfort': 'Show Comfort Parameters',
+                'settings.auto': 'Auto Calculate on Change',
+                'settings.reset': 'Reset to Defaults',
+                'settings.save': 'Save Changes',
                 'button.calculate': 'Calculate AQI',
+                'button.export': 'Export',
                 'aqi.good': 'Good',
                 'aqi.moderate': 'Moderate',
                 'aqi.unhealthy_sensitive': 'Unhealthy for Sensitive Groups',
@@ -1355,13 +1469,25 @@
                 const cardClass = isExceeded ? 'bg-warning' : 'bg-success';
                 const textClass = isExceeded ? 'text-dark' : 'text-white';
 
+                const percentText = {
+                    kz: `ДДҰ нормасынан ${(ratio * 100).toFixed(1)}%`,
+                    ru: `${(ratio * 100).toFixed(1)}% от нормы ВОЗ`,
+                    en: `${(ratio * 100).toFixed(1)}% of WHO guideline`
+                };
+
+                const statusText = {
+                    kz: isExceeded ? '⚠️ ДДҰ нормасы асып кетті' : '✅ ДДҰ нормасы шегінде',
+                    ru: isExceeded ? '⚠️ Превышена норма ВОЗ' : '✅ В пределах нормы ВОЗ',
+                    en: isExceeded ? '⚠️ Exceeds WHO guideline' : '✅ Within WHO guideline'
+                };
+
                 return `
                     <div class="comparison-card ${cardClass} ${textClass}">
                         <div class="d-flex justify-content-between align-items-center">
                             <span><strong>${pollutant.toUpperCase()}</strong></span>
-                            <span>${(ratio * 100).toFixed(1)}% от нормы ВОЗ</span>
+                            <span>${percentText[appState.currentLang] || percentText.kz}</span>
                         </div>
-                        ${isExceeded ? '<small>⚠️ Превышена норма ВОЗ</small>' : '<small>✅ В пределах нормы ВОЗ</small>'}
+                        <small>${statusText[appState.currentLang] || statusText.kz}</small>
                     </div>
                 `;
             }).join('');
@@ -1503,7 +1629,12 @@
             const historyList = document.getElementById('historyList');
             
             if (appState.history.length === 0) {
-                historyList.innerHTML = '<div class="text-muted text-center">История пуста</div>';
+                const emptyMessages = {
+                    kz: 'Тарих бос',
+                    ru: 'История пуста',
+                    en: 'History is empty'
+                };
+                historyList.innerHTML = `<div class="text-muted text-center">${emptyMessages[appState.currentLang] || emptyMessages.kz}</div>`;
                 return;
             }
 
@@ -1531,7 +1662,12 @@
         // Export functions
         function exportResults() {
             if (!appState.lastCalculation) {
-                alert('Нет данных для экспорта');
+                const noDataMessages = {
+                    kz: 'Экспортқа арналған деректер жоқ',
+                    ru: 'Нет данных для экспорта',
+                    en: 'No data to export'
+                };
+                alert(noDataMessages[appState.currentLang] || noDataMessages.kz);
                 return;
             }
 
@@ -1553,7 +1689,12 @@
 
         function exportHistory() {
             if (appState.history.length === 0) {
-                alert('История пуста');
+                const emptyHistoryMessages = {
+                    kz: 'Тарих бос',
+                    ru: 'История пуста',
+                    en: 'History is empty'
+                };
+                alert(emptyHistoryMessages[appState.currentLang] || emptyHistoryMessages.kz);
                 return;
             }
 
@@ -1570,7 +1711,12 @@
         window.calculateAQI = function() {
             const button = document.querySelector('.calculate-btn');
             const originalText = button.innerHTML;
-            button.innerHTML = '<div class="loading-spinner"></div> Расчет...';
+            const loadingTexts = {
+                kz: '<div class="loading-spinner"></div> Есептелуде...',
+                ru: '<div class="loading-spinner"></div> Расчет...',
+                en: '<div class="loading-spinner"></div> Calculating...'
+            };
+            button.innerHTML = loadingTexts[appState.currentLang] || loadingTexts.kz;
             button.disabled = true;
 
             setTimeout(() => {
@@ -1587,7 +1733,12 @@
                 });
 
                 if (Object.keys(inputs).length === 0) {
-                    showNotification('Введите хотя бы одно значение загрязнителя');
+                    const messages = {
+                        kz: 'Кем дегенде бір ластағыш мәнін енгізіңіз',
+                        ru: 'Введите хотя бы одно значение загрязнителя',
+                        en: 'Enter at least one pollutant value'
+                    };
+                    showNotification(messages[appState.currentLang] || messages.kz);
                     button.innerHTML = originalText;
                     button.disabled = false;
                     return;
@@ -1632,7 +1783,12 @@
 
                 // Check for dangerous levels
                 if (maxAQI > 150 && appState.settings.dangerAlerts) {
-                    showNotification('Обнаружен опасный уровень загрязнения воздуха! Ограничьте активности на улице.', 'danger');
+                    const dangerMessages = {
+                        kz: 'Ауаның қауіпті ластануы анықталды! Көшедегі белсенділікті шектеңіз.',
+                        ru: 'Обнаружен опасный уровень загрязнения воздуха! Ограничьте активности на улице.',
+                        en: 'Dangerous air pollution level detected! Limit outdoor activities.'
+                    };
+                    showNotification(dangerMessages[appState.currentLang] || dangerMessages.kz, 'danger');
                 }
 
                 const calculation = {
@@ -1658,7 +1814,12 @@
         };
 
         window.clearHistory = function() {
-            if (confirm('Очистить всю историю расчетов?')) {
+            const confirmMessages = {
+                kz: 'Есептеулердің барлық тарихын тазалау керек пе?',
+                ru: 'Очистить всю историю расчетов?',
+                en: 'Clear all calculation history?'
+            };
+            if (confirm(confirmMessages[appState.currentLang] || confirmMessages.kz)) {
                 appState.history = [];
                 saveHistory();
                 updateHistoryDisplay();
@@ -1667,14 +1828,14 @@
         };
 
         window.resetSettings = function() {
-            if (confirm('Сбросить все настройки к значениям по умолчанию?')) {
+            if (confirm('Барлық параметрлерді бастапқы мәндерге қалпына келтіру керек пе?')) {
                 appState.settings = {
                     showPollutants: {
                         pm25: true, pm10: true, o3: true,
                         co: true, no2: true, so2: true
                     },
                     showComfort: false,
-                    language: 'ru',
+                    language: 'kz',
                     soundNotifications: true,
                     dangerAlerts: true,
                     autoCalculate: false
@@ -1790,13 +1951,14 @@
     <!-- PWA Manifest -->
     <script>
         const manifest = {
-            "name": "AQI Calculator Pro",
+            "name": "AQI Калькуляторы Pro",
             "short_name": "AQI Pro",
-            "description": "Professional Air Quality Index Calculator",
+            "description": "Ауа сапасының кәсіби калькуляторы",
             "start_url": "./",
             "display": "standalone",
             "background_color": "#ffffff",
             "theme_color": "#007bff",
+            "lang": "kz",
             "icons": [
                 {
                     "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23667eea;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23764ba2;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' fill='url(%23grad)'/%3E%3Ctext x='50' y='60' text-anchor='middle' fill='white' font-size='18' font-weight='bold'%3EAQI%3C/text%3E%3C/svg%3E",
