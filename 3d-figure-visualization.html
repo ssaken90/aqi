@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Геометрический Визуализатор</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            text-align: center;
+            color: white;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 300;
+            margin-bottom: 0.5rem;
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .controls-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            min-width: 320px;
+            max-width: 400px;
+            height: fit-content;
+        }
+
+        .viewer-container {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            position: relative;
+            min-height: 500px;
+        }
+
+        .section {
+            margin-bottom: 1.5rem;
+        }
+
+        .section h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .shape-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+
+        .shape-btn {
+            background: #f5f5f5;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 1rem 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .shape-btn:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .shape-btn.active {
+            background: #2196f3;
+            color: white;
+            border-color: #1976d2;
+        }
+
+        .shape-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .inputs-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            color: #555;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #2196f3;
+        }
+
+        .input-group input:invalid {
+            border-color: #f44336;
+        }
+
+        .units-selector {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .unit-btn {
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .unit-btn.active {
+            background: #2196f3;
+            color: white;
+            border-color: #1976d2;
+        }
+
+        .color-picker {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .color-btn {
+            width: 40px;
+            height: 40px;
+            border: 3px solid transparent;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .color-btn.active {
+            border-color: #333;
+            transform: scale(1.1);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #2196f3;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1976d2;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #757575;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #616161;
+            transform: translateY(-2px);
+        }
+
+        .stats-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .viewer-controls {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            z-index: 10;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #333;
+        }
+
+        .control-btn:hover {
+            background: white;
+            transform: scale(1.05);
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+                padding: 0.5rem;
+            }
+
+            .controls-panel {
+                min-width: unset;
+                max-width: unset;
+                order: 2;
+            }
+
+            .viewer-container {
+                order: 1;
+                min-height: 400px;
+            }
+
+            .shape-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .color-picker {
+                grid-template-columns: repeat(8, 1fr);
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.4rem;
+            }
+
+            .controls-panel {
+                padding: 1rem;
+            }
+
+            .shape-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>3D Геометрический Визуализатор</h1>
+        <p>Выберите фигуру, задайте размеры и исследуйте в 3D</p>
+    </div>
+
+    <div class="main-container">
+        <div class="controls-panel">
+            <div class="section">
+                <h3>Выберите фигуру</h3>
+                <div class="shape-buttons">
+                    <div class="shape-btn active" data-shape="cube">
+                        <span class="shape-icon">⬜</span>
+                        Куб
+                    </div>
+                    <div class="shape-btn" data-shape="cylinder">
+                        <span class="shape-icon">🥫</span>
+                        Цилиндр
+                    </div>
+                    <div class="shape-btn" data-shape="sphere">
+                        <span class="shape-icon">⚪</span>
+                        Шар
+                    </div>
+                    <div class="shape-btn" data-shape="pyramid">
+                        <span class="shape-icon">🔺</span>
+                        Пирамида
+                    </div>
+                    <div class="shape-btn" data-shape="cone">
+                        <span class="shape-icon">🔺</span>
+                        Конус
+                    </div>
+                    <div class="shape-btn" data-shape="box">
+                        <span class="shape-icon">📦</span>
+                        Параллелепипед
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>Размеры</h3>
+                <div class="inputs-grid" id="inputsContainer">
+                    <!-- Динамически генерируемые поля ввода -->
+                </div>
+                <div class="units-selector">
+                    <div class="unit-btn active" data-unit="cm">см</div>
+                    <div class="unit-btn" data-unit="m">м</div>
+                    <div class="unit-btn" data-unit="in">дюйм</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>Цвет</h3>
+                <div class="color-picker">
+                    <div class="color-btn active" style="background: #2196f3" data-color="#2196f3"></div>
+                    <div class="color-btn" style="background: #f44336" data-color="#f44336"></div>
+                    <div class="color-btn" style="background: #4caf50" data-color="#4caf50"></div>
+                    <div class="color-btn" style="background: #ff9800" data-color="#ff9800"></div>
+                    <div class="color-btn" style="background: #9c27b0" data-color="#9c27b0"></div>
+                    <div class="color-btn" style="background: #ffeb3b" data-color="#ffeb3b"></div>
+                    <div class="color-btn" style="background: #795548" data-color="#795548"></div>
+                    <div class="color-btn" style="background: #607d8b" data-color="#607d8b"></div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" id="showBtn">Показать</button>
+                <button class="btn btn-secondary" id="clearBtn">Очистить</button>
+            </div>
+
+            <div class="stats-panel" id="statsPanel" style="display: none;">
+                <h3>Характеристики</h3>
+                <div class="stats-grid" id="statsGrid">
+                    <!-- Динамически генерируемая статистика -->
+                </div>
+            </div>
+        </div>
+
+        <div class="viewer-container">
+            <div class="viewer-controls">
+                <button class="control-btn" id="resetViewBtn" title="Сброс камеры">🎯</button>
+                <button class="control-btn" id="toggleGridBtn" title="Показать/скрыть сетку">⊞</button>
+            </div>
+            <div class="loading" id="loadingText">Выберите фигуру и нажмите "Показать"</div>
+            <canvas id="canvas3d"></canvas>
+        </div>
+    </div>
+
+    <script>
+        class GeometryVisualizer {
+            constructor() {
+                this.scene = null;
+                this.camera = null;
+                this.renderer = null;
+                this.controls = null;
+                this.currentMesh = null;
+                this.gridHelper = null;
+                this.axesHelper = null;
+                
+                this.currentShape = 'cube';
+                this.currentColor = '#2196f3';
+                this.currentUnit = 'cm';
+                
+                this.shapes = {
+                    cube: { params: ['side'], labels: ['Сторона'] },
+                    cylinder: { params: ['radius', 'height'], labels: ['Радиус', 'Высота'] },
+                    sphere: { params: ['radius'], labels: ['Радиус'] },
+                    pyramid: { params: ['base', 'height'], labels: ['Сторона основания', 'Высота'] },
+                    cone: { params: ['radius', 'height'], labels: ['Радиус', 'Высота'] },
+                    box: { params: ['length', 'width', 'height'], labels: ['Длина', 'Ширина', 'Высота'] }
+                };
+
+                this.unitFactors = {
+                    cm: 1,
+                    m: 100,
+                    in: 2.54
+                };
+
+                this.init();
+                this.setupEventListeners();
+                this.updateInputs();
+            }
+
+            init() {
+                const canvas = document.getElementById('canvas3d');
+                const container = canvas.parentElement;
+
+                // Scene
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0xf0f0f0);
+
+                // Camera
+                this.camera = new THREE.PerspectiveCamera(
+                    75,
+                    container.clientWidth / container.clientHeight,
+                    0.1,
+                    1000
+                );
+                this.camera.position.set(15, 15, 15);
+
+                // Renderer
+                this.renderer = new THREE.WebGLRenderer({ 
+                    canvas: canvas,
+                    antialias: true,
+                    alpha: true
+                });
+                this.renderer.setSize(container.clientWidth, container.clientHeight);
+                this.renderer.setPixelRatio(window.devicePixelRatio);
+                this.renderer.shadowMap.enabled = true;
+                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+                // Lighting
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                this.scene.add(ambientLight);
+
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(20, 20, 20);
+                directionalLight.castShadow = true;
+                directionalLight.shadow.mapSize.width = 2048;
+                directionalLight.shadow.mapSize.height = 2048;
+                this.scene.add(directionalLight);
+
+                // Grid and axes
+                this.gridHelper = new THREE.GridHelper(50, 50, 0x888888, 0xcccccc);
+                this.scene.add(this.gridHelper);
+
+                this.axesHelper = new THREE.AxesHelper(20);
+                this.scene.add(this.axesHelper);
+
+                // Controls (OrbitControls implementation)
+                this.setupOrbitControls();
+
+                // Handle resize
+                window.addEventListener('resize', () => this.onWindowResize());
+                
+                this.animate();
+            }
+
+            setupOrbitControls() {
+                // Simple orbit controls implementation
+                let isMouseDown = false;
+                let mouseX = 0;
+                let mouseY = 0;
+                let targetRotationX = 0;
+                let targetRotationY = 0;
+                let rotationX = 0;
+                let rotationY = 0;
+                const radius = 25;
+
+                const canvas = this.renderer.domElement;
+
+                canvas.addEventListener('mousedown', (event) => {
+                    isMouseDown = true;
+                    mouseX = event.clientX;
+                    mouseY = event.clientY;
+                });
+
+                canvas.addEventListener('mousemove', (event) => {
+                    if (!isMouseDown) return;
+
+                    const deltaX = event.clientX - mouseX;
+                    const deltaY = event.clientY - mouseY;
+
+                    targetRotationY += deltaX * 0.01;
+                    targetRotationX += deltaY * 0.01;
+
+                    mouseX = event.clientX;
+                    mouseY = event.clientY;
+                });
+
+                canvas.addEventListener('mouseup', () => {
+                    isMouseDown = false;
+                });
+
+                canvas.addEventListener('wheel', (event) => {
+                    event.preventDefault();
+                    const scale = event.deltaY > 0 ? 1.1 : 0.9;
+                    this.camera.position.multiplyScalar(scale);
+                    this.camera.position.clampLength(5, 100);
+                });
+
+                // Update camera position in animation loop
+                this.updateCameraPosition = () => {
+                    rotationX += (targetRotationX - rotationX) * 0.05;
+                    rotationY += (targetRotationY - rotationY) * 0.05;
+
+                    const distance = this.camera.position.length();
+                    this.camera.position.x = distance * Math.sin(rotationY) * Math.cos(rotationX);
+                    this.camera.position.y = distance * Math.sin(rotationX);
+                    this.camera.position.z = distance * Math.cos(rotationY) * Math.cos(rotationX);
+                    this.camera.lookAt(0, 0, 0);
+                };
+            }
+
+            setupEventListeners() {
+                // Shape selection
+                document.querySelectorAll('.shape-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelector('.shape-btn.active').classList.remove('active');
+                        btn.classList.add('active');
+                        this.currentShape = btn.dataset.shape;
+                        this.updateInputs();
+                    });
+                });
+
+                // Unit selection
+                document.querySelectorAll('.unit-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelector('.unit-btn.active').classList.remove('active');
+                        btn.classList.add('active');
+                        this.currentUnit = btn.dataset.unit;
+                    });
+                });
+
+                // Color selection
+                document.querySelectorAll('.color-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelector('.color-btn.active').classList.remove('active');
+                        btn.classList.add('active');
+                        this.currentColor = btn.dataset.color;
+                    });
+                });
+
+                // Buttons
+                document.getElementById('showBtn').addEventListener('click', () => this.showShape());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clearShape());
+                document.getElementById('resetViewBtn').addEventListener('click', () => this.resetView());
+                document.getElementById('toggleGridBtn').addEventListener('click', () => this.toggleGrid());
+            }
+
+            updateInputs() {
+                const container = document.getElementById('inputsContainer');
+                const shape = this.shapes[this.currentShape];
+                
+                container.innerHTML = '';
+                
+                shape.params.forEach((param, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'input-group';
+                    div.innerHTML = `
+                        <label for="${param}">${shape.labels[index]}</label>
+                        <input type="number" id="${param}" min="0.1" max="100" step="0.1" value="5">
+                    `;
+                    container.appendChild(div);
+                });
+            }
+
+            getInputValues() {
+                const shape = this.shapes[this.currentShape];
+                const values = {};
+                let isValid = true;
+
+                shape.params.forEach(param => {
+                    const input = document.getElementById(param);
+                    const value = parseFloat(input.value);
+                    
+                    if (isNaN(value) || value < 0.1 || value > 100) {
+                        input.style.borderColor = '#f44336';
+                        isValid = false;
+                    } else {
+                        input.style.borderColor = '#e0e0e0';
+                        values[param] = value * this.unitFactors[this.currentUnit];
+                    }
+                });
+
+                return isValid ? values : null;
+            }
+
+            createGeometry(values) {
+                switch (this.currentShape) {
+                    case 'cube':
+                        return new THREE.BoxGeometry(values.side, values.side, values.side);
+                    
+                    case 'cylinder':
+                        return new THREE.CylinderGeometry(values.radius, values.radius, values.height, 32);
+                    
+                    case 'sphere':
+                        return new THREE.SphereGeometry(values.radius, 32, 32);
+                    
+                    case 'pyramid':
+                        return new THREE.ConeGeometry(values.base / Math.sqrt(2), values.height, 4);
+                    
+                    case 'cone':
+                        return new THREE.ConeGeometry(values.radius, values.height, 32);
+                    
+                    case 'box':
+                        return new THREE.BoxGeometry(values.length, values.height, values.width);
+                    
+                    default:
+                        return new THREE.BoxGeometry(5, 5, 5);
+                }
+            }
+
+            calculateStats(values) {
+                const factor = this.unitFactors[this.currentUnit];
+                const unit = this.currentUnit;
+                const unit2 = unit + '²';
+                const unit3 = unit + '³';
+
+                let volume, surfaceArea, perimeter;
+
+                switch (this.currentShape) {
+                    case 'cube':
+                        const side = values.side / factor;
+                        volume = Math.pow(side, 3);
+                        surfaceArea = 6 * Math.pow(side, 2);
+                        perimeter = 12 * side;
+                        break;
+                    
+                    case 'cylinder':
+                        const r_cyl = values.radius / factor;
+                        const h_cyl = values.height / factor;
+                        volume = Math.PI * Math.pow(r_cyl, 2) * h_cyl;
+                        surfaceArea = 2 * Math.PI * r_cyl * (r_cyl + h_cyl);
+                        perimeter = 4 * Math.PI * r_cyl;
+                        break;
+                    
+                    case 'sphere':
+                        const r_sph = values.radius / factor;
+                        volume = (4/3) * Math.PI * Math.pow(r_sph, 3);
+                        surfaceArea = 4 * Math.PI * Math.pow(r_sph, 2);
+                        perimeter = 2 * Math.PI * r_sph;
+                        break;
+                    
+                    case 'pyramid':
+                        const base_pyr = values.base / factor;
+                        const h_pyr = values.height / factor;
+                        volume = (1/3) * Math.pow(base_pyr, 2) * h_pyr;
+                        const slantHeight = Math.sqrt(Math.pow(h_pyr, 2) + Math.pow(base_pyr/2, 2));
+                        surfaceArea = Math.pow(base_pyr, 2) + 4 * (0.5 * base_pyr * slantHeight);
+                        perimeter = 4 * base_pyr;
+                        break;
+                    
+                    case 'cone':
+                        const r_cone = values.radius / factor;
+                        const h_cone = values.height / factor;
+                        volume = (1/3) * Math.PI * Math.pow(r_cone, 2) * h_cone;
+                        const slantHeight_cone = Math.sqrt(Math.pow(h_cone, 2) + Math.pow(r_cone, 2));
+                        surfaceArea = Math.PI * r_cone * (r_cone + slantHeight_cone);
+                        perimeter = 2 * Math.PI * r_cone;
+                        break;
+                    
+                    case 'box':
+                        const l = values.length / factor;
+                        const w = values.width / factor;
+                        const h = values.height / factor;
+                        volume = l * w * h;
+                        surfaceArea = 2 * (l*w + w*h + h*l);
+                        perimeter = 4 * (l + w + h);
+                        break;
+                }
+
+                return {
+                    volume: volume.toFixed(2) + ' ' + unit3,
+                    surfaceArea: surfaceArea.toFixed(2) + ' ' + unit2,
+                    perimeter: perimeter.toFixed(2) + ' ' + unit
+                };
+            }
+
+            showShape() {
+                const values = this.getInputValues();
+                if (!values) {
+                    alert('Пожалуйста, введите корректные значения');
+                    return;
+                }
+
+                this.clearShape();
+
+                const geometry = this.createGeometry(values);
+                const material = new THREE.MeshLambertMaterial({ 
+                    color: this.currentColor,
+                    transparent: true,
+                    opacity: 0.9
+                });
+
+                this.currentMesh = new THREE.Mesh(geometry, material);
+                this.currentMesh.castShadow = true;
+                this.currentMesh.receiveShadow = true;
+                this.scene.add(this.currentMesh);
+
+                // Show stats
+                const stats = this.calculateStats(values);
+                this.showStats(stats);
+
+                // Hide loading text
+                document.getElementById('loadingText').style.display = 'none';
+            }
+
+            showStats(stats) {
+                const panel = document.getElementById('statsPanel');
+                const grid = document.getElementById('statsGrid');
+                
+                grid.innerHTML = `
+                    <div class="stat-item">
+                        <span class="stat-label">Объем:</span>
+                        <span class="stat-value">${stats.volume}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Площадь поверхности:</span>
+                        <span class="stat-value">${stats.surfaceArea}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Периметр:</span>
+                        <span class="stat-value">${stats.perimeter}</span>
+                    </div>
+                `;
+                
+                panel.style.display = 'block';
+            }
+
+            clearShape() {
+                if (this.currentMesh) {
+                    this.scene.remove(this.currentMesh);
+                    this.currentMesh.geometry.dispose();
+                    this.currentMesh.material.dispose();
+                    this.currentMesh = null;
+                }
+                
+                document.getElementById('statsPanel').style.display = 'none';
+                document.getElementById('loadingText').style.display = 'block';
+            }
+
+            resetView() {
+                this.camera.position.set(15, 15, 15);
+                this.camera.lookAt(0, 0, 0);
+            }
+
+            toggleGrid() {
+                this.gridHelper.visible = !this.gridHelper.visible;
+                this.axesHelper.visible = !this.axesHelper.visible;
+            }
+
+            onWindowResize() {
+                const container = this.renderer.domElement.parentElement;
+                this.camera.aspect = container.clientWidth / container.clientHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(container.clientWidth, container.clientHeight);
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                
+                if (this.updateCameraPosition) {
+                    this.updateCameraPosition();
+                }
+                
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            new GeometryVisualizer();
+        });
+    </script>
+</body>
+</html>
