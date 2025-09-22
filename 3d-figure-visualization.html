@@ -67,6 +67,14 @@
             min-height: 500px;
         }
 
+        #canvas3d {
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
         .section {
             margin-bottom: 1.5rem;
         }
@@ -269,6 +277,25 @@
             z-index: 10;
         }
 
+        .mobile-hint {
+            position: absolute;
+            bottom: 1rem;
+            left: 1rem;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .mobile-hint.show {
+            opacity: 1;
+        }
+
         .control-btn {
             background: rgba(255, 255, 255, 0.9);
             border: none;
@@ -420,6 +447,9 @@
                 <button class="control-btn" id="resetViewBtn" title="Сброс камеры">🎯</button>
                 <button class="control-btn" id="toggleGridBtn" title="Показать/скрыть сетку">⊞</button>
             </div>
+            <div class="mobile-hint" id="mobileHint">
+                📱 Поворачивайте одним пальцем • Увеличивайте двумя пальцами
+            </div>
             <div class="loading" id="loadingText">Выберите фигуру и нажмите "Показать"</div>
             <canvas id="canvas3d"></canvas>
         </div>
@@ -458,6 +488,21 @@
                 this.init();
                 this.setupEventListeners();
                 this.updateInputs();
+                this.checkMobileDevice();
+            }
+
+            checkMobileDevice() {
+                // Show mobile hint on touch devices
+                const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+                if (isMobile) {
+                    const hint = document.getElementById('mobileHint');
+                    setTimeout(() => {
+                        hint.classList.add('show');
+                        setTimeout(() => {
+                            hint.classList.remove('show');
+                        }, 4000);
+                    }, 1000);
+                }
             }
 
             init() {
@@ -516,19 +561,38 @@
             }
 
             setupOrbitControls() {
-                // Simple orbit controls implementation
+                // Enhanced orbit controls with touch support
                 let isMouseDown = false;
+                let isTouching = false;
                 let mouseX = 0;
                 let mouseY = 0;
                 let targetRotationX = 0;
                 let targetRotationY = 0;
                 let rotationX = 0;
                 let rotationY = 0;
-                const radius = 25;
+                let lastTouchDistance = 0;
 
                 const canvas = this.renderer.domElement;
 
+                // Helper function to get touch coordinates
+                const getTouchPos = (touch) => {
+                    const rect = canvas.getBoundingClientRect();
+                    return {
+                        x: touch.clientX - rect.left,
+                        y: touch.clientY - rect.top
+                    };
+                };
+
+                // Helper function to get distance between two touches
+                const getTouchDistance = (touch1, touch2) => {
+                    const dx = touch1.clientX - touch2.clientX;
+                    const dy = touch1.clientY - touch2.clientY;
+                    return Math.sqrt(dx * dx + dy * dy);
+                };
+
+                // Mouse events
                 canvas.addEventListener('mousedown', (event) => {
+                    event.preventDefault();
                     isMouseDown = true;
                     mouseX = event.clientX;
                     mouseY = event.clientY;
@@ -536,6 +600,7 @@
 
                 canvas.addEventListener('mousemove', (event) => {
                     if (!isMouseDown) return;
+                    event.preventDefault();
 
                     const deltaX = event.clientX - mouseX;
                     const deltaY = event.clientY - mouseY;
@@ -547,16 +612,74 @@
                     mouseY = event.clientY;
                 });
 
-                canvas.addEventListener('mouseup', () => {
+                canvas.addEventListener('mouseup', (event) => {
+                    event.preventDefault();
                     isMouseDown = false;
                 });
 
+                // Touch events
+                canvas.addEventListener('touchstart', (event) => {
+                    event.preventDefault();
+                    isTouching = true;
+                    
+                    if (event.touches.length === 1) {
+                        // Single touch - rotation
+                        const touch = getTouchPos(event.touches[0]);
+                        mouseX = touch.x;
+                        mouseY = touch.y;
+                    } else if (event.touches.length === 2) {
+                        // Two touches - prepare for zoom
+                        lastTouchDistance = getTouchDistance(event.touches[0], event.touches[1]);
+                    }
+                }, { passive: false });
+
+                canvas.addEventListener('touchmove', (event) => {
+                    event.preventDefault();
+                    
+                    if (!isTouching) return;
+
+                    if (event.touches.length === 1) {
+                        // Single touch - rotation
+                        const touch = getTouchPos(event.touches[0]);
+                        const deltaX = touch.x - mouseX;
+                        const deltaY = touch.y - mouseY;
+
+                        targetRotationY += deltaX * 0.02;
+                        targetRotationX += deltaY * 0.02;
+
+                        mouseX = touch.x;
+                        mouseY = touch.y;
+                    } else if (event.touches.length === 2) {
+                        // Two touches - zoom
+                        const currentDistance = getTouchDistance(event.touches[0], event.touches[1]);
+                        const scale = lastTouchDistance / currentDistance;
+                        
+                        this.camera.position.multiplyScalar(scale);
+                        this.camera.position.clampLength(5, 100);
+                        
+                        lastTouchDistance = currentDistance;
+                    }
+                }, { passive: false });
+
+                canvas.addEventListener('touchend', (event) => {
+                    event.preventDefault();
+                    if (event.touches.length === 0) {
+                        isTouching = false;
+                    }
+                }, { passive: false });
+
+                // Prevent context menu on long press
+                canvas.addEventListener('contextmenu', (event) => {
+                    event.preventDefault();
+                });
+
+                // Mouse wheel for desktop
                 canvas.addEventListener('wheel', (event) => {
                     event.preventDefault();
                     const scale = event.deltaY > 0 ? 1.1 : 0.9;
                     this.camera.position.multiplyScalar(scale);
                     this.camera.position.clampLength(5, 100);
-                });
+                }, { passive: false });
 
                 // Update camera position in animation loop
                 this.updateCameraPosition = () => {
